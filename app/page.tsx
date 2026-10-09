@@ -1,0 +1,104 @@
+import Link from 'next/link'
+import { Camera, Check, Church, ChevronDown, ExternalLink, Gift, Heart, MapPin, UtensilsCrossed } from 'lucide-react'
+import { ArabescoTopo, Moldura, OrnamentalDivider, Rodape } from '@/components/convite/moldura'
+import { casamento, slotsDeFoto } from '@/lib/casamento'
+import { buscarConvite, buscarFotos } from '@/lib/supabase'
+
+function FotoCasal({ src, label, className = '' }: { src?: string; label: string; className?: string }) {
+  return (
+    <div className={`photo-slot relative overflow-hidden ${className}`}>
+      {src ? (
+        <img src={src} alt={label} className="absolute inset-0 size-full object-cover" />
+      ) : (
+        <span className="flex flex-col items-center gap-3 text-[#6e7f91]">
+          <span className="flex size-11 items-center justify-center rounded-full border border-[#9bb6c8] bg-white/70">
+            <Camera aria-hidden="true" className="size-5" strokeWidth={1.4} />
+          </span>
+          <span className="font-sans text-[10px] uppercase tracking-[0.28em]">{label}</span>
+        </span>
+      )}
+    </div>
+  )
+}
+
+export default async function Page({ searchParams }: { searchParams: Promise<{ convite?: string }> }) {
+  const { convite: codigo } = await searchParams
+  const [fotos, convite] = await Promise.all([buscarFotos(), codigo ? buscarConvite(codigo) : null])
+  const linkConfirmacao = convite ? `/confirmar/${convite.codigo}` : '/confirmar'
+
+  return (
+    <Moldura>
+      <header className="hero-section relative flex min-h-[760px] flex-col items-center justify-center overflow-hidden px-6 py-20 text-center sm:min-h-[830px] sm:px-16">
+        <ArabescoTopo />
+        <p className="eyebrow relative">O nosso sim começa aqui</p>
+        <div className="relative mt-10 mb-7 text-acento" aria-hidden="true"><Heart className="mx-auto size-5 fill-current" strokeWidth={1} /></div>
+        <h1 className="names-display relative">Aurea <span>&amp;</span> Alec</h1>
+        <p className="quote relative">“Ainda que eu falasse a língua dos homens e falasse a língua dos anjos, sem amor eu nada seria.”</p>
+        <div className="relative mt-14 flex items-center gap-5 text-acento"><span className="h-px w-16 bg-[#c7d4dd]" /><span className="font-sans text-[10px] uppercase tracking-[0.3em]">{casamento.data}</span><span className="h-px w-16 bg-[#c7d4dd]" /></div>
+        {convite && (
+          <p className="relative mt-10 font-serif text-lg italic text-texto">
+            Convite especial para <span className="not-italic font-medium text-azul">{convite.nome}</span>
+          </p>
+        )}
+        <a href="#historia" className="absolute bottom-8 animate-bounce text-acento" aria-label="Rolar para ver mais"><ChevronDown className="size-5" /></a>
+      </header>
+
+      <section id="historia" className="section-padding border-t border-linha text-center">
+        <p className="eyebrow">Com a bênção dos nossos pais</p>
+        <div className="mx-auto mt-9 grid max-w-lg grid-cols-2 gap-8 font-sans text-[10px] uppercase tracking-[0.16em] text-[#59636d] sm:gap-20">
+          <p>Ana Paula M. de O. Moreira<br /><span className="text-suave">Fco. Auricio S. Moreira</span></p>
+          <p>Tatiana Pinheiro Oliveira<br /><span className="text-suave">Fco. Claudio Oliveira</span></p>
+        </div>
+        <OrnamentalDivider />
+        <p className="mx-auto max-w-lg font-serif text-[21px] leading-relaxed text-texto">Duas histórias que se encontraram, dois corações que escolheram caminhar juntos.</p>
+      </section>
+
+      <section className="section-padding bg-nevoa text-center">
+        <p className="eyebrow">Um pedacinho da nossa história</p>
+        <h2 className="section-title mt-4">Momentos que guardamos</h2>
+        <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6">
+          {slotsDeFoto.map((slot, i) => (
+            <FotoCasal key={slot.id} src={fotos[slot.id]} label={slot.label} className={`aspect-[4/5] ${i % 2 ? 'mt-10 sm:mt-16' : ''}`} />
+          ))}
+        </div>
+      </section>
+
+      <section className="section-padding text-center">
+        <p className="eyebrow">Reserve esta data</p>
+        <h2 className="date-display">27 de dezembro<br /><span>de 2026</span></h2>
+        <p className="mt-5 font-sans text-xs uppercase tracking-[0.3em] text-[#53616d]">Domingo, às 16h</p>
+        <OrnamentalDivider />
+        <div className="mx-auto max-w-md space-y-10 font-sans text-xs uppercase tracking-[0.2em] text-texto">
+          <div>
+            <Church className="mx-auto mb-3 size-5 text-[#8ea6b7]" strokeWidth={1.2} />
+            <p>Cerimônia na Cripta<br />da Catedral de Fortaleza</p>
+            <p className="mt-2 text-[#8ea6b7]">{casamento.igreja.endereco}</p>
+          </div>
+          <div>
+            <UtensilsCrossed className="mx-auto mb-3 size-5 text-[#8ea6b7]" strokeWidth={1.2} />
+            <p>Após a cerimônia, os convidados serão recebidos no espaço {casamento.buffet.nome}</p>
+            <p className="mt-2 text-[#8ea6b7]">{casamento.buffet.endereco}</p>
+          </div>
+        </div>
+      </section>
+
+      <nav className="flex flex-col gap-3 bg-nevoa px-6 py-12 sm:px-20" aria-label="Links do convite">
+        <a className="invite-link" href={casamento.igreja.mapa} target="_blank" rel="noreferrer"><Church data-icon="inline-start" /> Localização da igreja <ExternalLink data-icon="inline-end" /></a>
+        <a className="invite-link" href={casamento.buffet.mapa} target="_blank" rel="noreferrer"><MapPin data-icon="inline-start" /> Localização do buffet <ExternalLink data-icon="inline-end" /></a>
+        <a className="invite-link" href="#historia"><Heart data-icon="inline-start" /> Site dos noivos <ExternalLink data-icon="inline-end" /></a>
+        <Link className="invite-link" href="/presentes"><Gift data-icon="inline-start" /> Lista de presente <ExternalLink data-icon="inline-end" /></Link>
+        <Link className="invite-link invite-link-dark" href={linkConfirmacao}><Check data-icon="inline-start" /> Confirme sua presença <ExternalLink data-icon="inline-end" /></Link>
+      </nav>
+
+      <section id="rsvp" className="section-padding bg-papel text-center">
+        <p className="eyebrow">Esperamos você</p>
+        <h2 className="section-title mt-4">Venha celebrar conosco</h2>
+        <p className="lead mx-auto mt-4 max-w-sm">Sua presença vai tornar este dia ainda mais especial.</p>
+        <Link href={linkConfirmacao} className="btn-primary mt-8">Confirmar presença <Check /></Link>
+        <p className="small-caps mt-6">Confirmar presença até dia {casamento.prazoConfirmacao}</p>
+      </section>
+
+      <Rodape />
+    </Moldura>
+  )
+}
