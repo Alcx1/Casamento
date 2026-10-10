@@ -20,7 +20,7 @@ export const casamento = {
   },
 
   buffet: {
-    nome: "Buffet Viv'Á",
+    nome: "Buffet Viv'Ana",
     endereco: 'Rua General Piragibe, 797 · Parquelândia',
     mapa: 'https://www.google.com/maps/search/?api=1&query=Rua+General+Piragibe+797+Parquelandia+Fortaleza',
   },
