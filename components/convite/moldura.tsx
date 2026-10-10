@@ -22,6 +22,18 @@ export function ArabescoTopo() {
   )
 }
 
+/** O mesmo arabesco, espelhado na parte de baixo. Use junto com o ArabescoTopo (que define o filtro de cor). */
+export function ArabescoRodape() {
+  return (
+    <img
+      src="/arabesco.png"
+      alt=""
+      aria-hidden="true"
+      className="arabesco pointer-events-none absolute left-1/2 -bottom-2 h-auto w-full max-w-none -translate-x-1/2 scale-y-[-1] select-none opacity-90 sm:-bottom-10"
+    />
+  )
+}
+
 export function OrnamentalDivider() {
   return <div aria-hidden="true" className="ornamental-divider"><span>✦</span></div>
 }

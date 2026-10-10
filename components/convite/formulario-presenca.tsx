@@ -15,18 +15,31 @@ const linkCalendario =
   `&location=${encodeURIComponent(`${casamento.igreja.nome} — Fortaleza`)}` +
   `&details=${encodeURIComponent(`Cerimônia: ${casamento.igreja.nome}\nRecepção: ${casamento.buffet.nome}, ${casamento.buffet.endereco}`)}`
 
-export function FormularioPresenca({ convite }: { convite: ConvitePublico }) {
+export function FormularioPresenca({ convite, aoTrocar }: { convite: ConvitePublico; aoTrocar?: () => void }) {
+  const convidados = convite.nomes_convidados ?? []
+  // Lugares além dos nomes cadastrados viram campos livres ("acompanhante")
+  const vagasExtras = Math.max(0, convite.max_pessoas - convidados.length)
+
   const [editando, setEditando] = useState(convite.status === 'pendente')
   const [status, setStatus] = useState(convite.status)
   const [vai, setVai] = useState<boolean | null>(convite.status === 'pendente' ? null : convite.status === 'confirmado')
-  const [nomes, setNomes] = useState<string[]>(() =>
-    Array.from({ length: convite.max_pessoas }, (_, i) => convite.nomes_confirmados[i] ?? ''),
+  const [marcados, setMarcados] = useState<string[]>(() =>
+    convite.status === 'confirmado' ? convidados.filter((n) => convite.nomes_confirmados.includes(n)) : convidados,
   )
+  const [extras, setExtras] = useState<string[]>(() => {
+    const anteriores = convite.nomes_confirmados.filter((n) => !convidados.includes(n))
+    return Array.from({ length: vagasExtras }, (_, i) => anteriores[i] ?? '')
+  })
   const [mensagem, setMensagem] = useState(convite.mensagem ?? '')
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
 
-  const nomesPreenchidos = nomes.map((n) => n.trim()).filter(Boolean)
+  const nomesFinais = [...convidados.filter((n) => marcados.includes(n)), ...extras.map((n) => n.trim()).filter(Boolean)]
+
+  function alternar(nome: string) {
+    setErro('')
+    setMarcados((atual) => (atual.includes(nome) ? atual.filter((n) => n !== nome) : [...atual, nome]))
+  }
 
   // O botão fica sempre clicável: no celular um botão desabilitado parece "travado", então explicamos o que falta.
   async function enviar(event: React.FormEvent) {
@@ -34,13 +47,13 @@ export function FormularioPresenca({ convite }: { convite: ConvitePublico }) {
     if (enviando) return
     if (!supabase) return setErro('Confirmação indisponível no momento. Tente novamente mais tarde.')
     if (vai === null) return setErro('Escolha se você poderá comparecer.')
-    if (vai && nomesPreenchidos.length === 0) return setErro('Preencha o nome de pelo menos uma pessoa.')
+    if (vai && nomesFinais.length === 0) return setErro('Marque ou preencha pelo menos uma pessoa.')
     setEnviando(true)
     setErro('')
     const { error } = await supabase.rpc('responder_convite', {
       p_codigo: convite.codigo,
       p_vai: vai,
-      p_nomes: vai ? nomesPreenchidos : [],
+      p_nomes: vai ? nomesFinais : [],
       p_mensagem: mensagem,
     })
     setEnviando(false)
@@ -53,15 +66,16 @@ export function FormularioPresenca({ convite }: { convite: ConvitePublico }) {
   }
 
   if (!editando) {
+    const confirmados = nomesFinais.length ? nomesFinais : convite.nomes_confirmados
     return status === 'confirmado' ? (
       <div>
         <PartyPopper className="mx-auto size-8 text-acento" strokeWidth={1.2} />
         <h2 className="section-title mt-4">Que alegria!</h2>
         <p className="lead mt-3">
-          Presença confirmada para <strong className="font-medium text-azul">{nomesPreenchidos.length || convite.pessoas_confirmadas}</strong>{' '}
-          {(nomesPreenchidos.length || convite.pessoas_confirmadas) === 1 ? 'pessoa' : 'pessoas'}. Mal podemos esperar para celebrar com vocês!
+          Presença confirmada para <strong className="font-medium text-azul">{confirmados.length}</strong>{' '}
+          {confirmados.length === 1 ? 'pessoa' : 'pessoas'}. Mal podemos esperar para celebrar com vocês!
         </p>
-        <p className="small-caps mt-4 leading-relaxed">{(nomesPreenchidos.length ? nomesPreenchidos : convite.nomes_confirmados).join(' · ')}</p>
+        <p className="small-caps mt-4 leading-relaxed">{confirmados.join(' · ')}</p>
         <OrnamentalDivider />
         <div className="flex flex-col gap-3">
           <a href={linkCalendario} target="_blank" rel="noreferrer" className="btn-primary">Salvar na agenda <CalendarPlus /></a>
@@ -85,34 +99,50 @@ export function FormularioPresenca({ convite }: { convite: ConvitePublico }) {
 
   return (
     <form onSubmit={enviar} className="text-left">
+      <div className="mb-7 text-center">
+        <p className="small-caps">Convite de</p>
+        <p className="mt-1 font-serif text-2xl text-titulo">{convite.nome}</p>
+        <p className="small-caps mt-1">
+          {convite.max_pessoas} {convite.max_pessoas === 1 ? 'lugar reservado' : 'lugares reservados'}
+        </p>
+        {aoTrocar && <button type="button" onClick={aoTrocar} className="back-link mt-1">Não é você? Buscar outro nome</button>}
+      </div>
+
       <p className="field-label text-center">Você poderá comparecer?</p>
       <div className="grid grid-cols-2 gap-3">
-        <button type="button" className="choice-card" data-ativo={vai === true} aria-pressed={vai === true} onClick={() => { setVai(true); setErro("") }}>
+        <button type="button" className="choice-card" data-ativo={vai === true} aria-pressed={vai === true} onClick={() => { setVai(true); setErro('') }}>
           <Check className="size-5" strokeWidth={1.4} /> Sim, eu vou!
         </button>
-        <button type="button" className="choice-card" data-ativo={vai === false} aria-pressed={vai === false} onClick={() => { setVai(false); setErro("") }}>
+        <button type="button" className="choice-card" data-ativo={vai === false} aria-pressed={vai === false} onClick={() => { setVai(false); setErro('') }}>
           <Frown className="size-5" strokeWidth={1.4} /> Não poderei
         </button>
       </div>
 
       {vai && (
         <div className="mt-8 space-y-3">
-          <p className="field-label">
-            {convite.max_pessoas === 1 ? 'Seu nome' : `Quem vai? (até ${convite.max_pessoas} pessoas)`}
-          </p>
-          {nomes.map((nome, i) => (
+          <p className="field-label">Quem vai?</p>
+          {convidados.map((nome) => (
+            <label key={nome} className="check-row" data-ativo={marcados.includes(nome)}>
+              <input type="checkbox" checked={marcados.includes(nome)} onChange={() => alternar(nome)} className="sr-only" />
+              <span className="check-box" aria-hidden="true"><Check className="size-3.5" strokeWidth={2.5} /></span>
+              <span className="font-serif text-lg text-tinta">{nome}</span>
+            </label>
+          ))}
+          {extras.map((nome, i) => (
             <input
               key={i}
               value={nome}
-              onChange={(e) => setNomes((atual) => atual.map((n, j) => (j === i ? e.target.value : n)))}
-              placeholder={convite.max_pessoas === 1 ? 'Nome completo' : `Convidado ${i + 1}`}
-              aria-label={`Nome do convidado ${i + 1}`}
+              onChange={(e) => { setErro(''); setExtras((atual) => atual.map((n, j) => (j === i ? e.target.value : n))) }}
+              placeholder={convidados.length ? `Acompanhante ${vagasExtras > 1 ? i + 1 : ''}`.trim() : `Convidado ${i + 1}`}
+              aria-label={convidados.length ? `Nome do acompanhante ${i + 1}` : `Nome do convidado ${i + 1}`}
               autoCapitalize="words"
-              autoComplete={i === 0 ? "name" : "off"}
+              autoComplete="off"
               className="field-input"
             />
           ))}
-          {convite.max_pessoas > 1 && <p className="small-caps !tracking-[0.12em]">Deixe em branco quem não poderá ir</p>}
+          <p className="small-caps !tracking-[0.12em]">
+            {convidados.length ? 'Desmarque quem não poderá ir' : 'Deixe em branco quem não poderá ir'}
+          </p>
         </div>
       )}
 

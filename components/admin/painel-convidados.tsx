@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Check, Copy, Download, MessageCircle, Plus, Search, Trash2 } from 'lucide-react'
+import { Check, Copy, Download, MessageCircle, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { casamento } from '@/lib/casamento'
 import { supabase, type Convite } from '@/lib/supabase'
 
@@ -58,14 +58,14 @@ export function PainelConvidados() {
   }, [convites])
 
   const visiveis = convites.filter(
-    (c) => (filtro === 'todos' || c.status === filtro) && c.nome.toLowerCase().includes(busca.trim().toLowerCase()),
+    (c) => (filtro === 'todos' || c.status === filtro) && [c.nome, ...(c.nomes_convidados ?? [])].some((n) => n.toLowerCase().includes(busca.trim().toLowerCase())),
   )
 
   function exportarCsv() {
     const linhas = [
-      ['Convite', 'Código', 'Telefone', 'Lugares', 'Status', 'Confirmados', 'Nomes', 'Recado', 'Respondido em'],
+      ['Convite', 'Convidados', 'Telefone', 'Lugares', 'Status', 'Confirmados', 'Quem vai', 'Recado', 'Respondido em'],
       ...convites.map((c) => [
-        c.nome, c.codigo, c.telefone ?? '', c.max_pessoas, c.status, c.pessoas_confirmadas,
+        c.nome, (c.nomes_convidados ?? []).join(', '), c.telefone ?? '', c.max_pessoas, c.status, c.pessoas_confirmadas,
         c.nomes_confirmados.join(', '), c.mensagem ?? '', c.respondido_em ? new Date(c.respondido_em).toLocaleString('pt-BR') : '',
       ]),
     ]
@@ -85,7 +85,7 @@ export function PainelConvidados() {
         <Indicador valor={resumo.recusados} label="Não poderão ir" />
       </div>
 
-      <NovoConvite aoCriar={recarregar} />
+      <FormularioConvite aoSalvar={recarregar} />
 
       <div className="mt-12 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-2">
@@ -122,53 +122,110 @@ function Indicador({ valor, label, destaque = false }: { valor: React.ReactNode;
   )
 }
 
-function NovoConvite({ aoCriar }: { aoCriar: () => Promise<void> }) {
-  const [nome, setNome] = useState('')
-  const [telefone, setTelefone] = useState('')
-  const [maxPessoas, setMaxPessoas] = useState(2)
+function paraLista(texto: string) {
+  return texto.split(/\n|,|;/).map((n) => n.trim().replace(/\s+/g, ' ')).filter(Boolean)
+}
+
+/** Formulário usado tanto para criar quanto para editar um convite. */
+function FormularioConvite({ inicial, aoSalvar, aoCancelar }: { inicial?: Convite; aoSalvar: () => Promise<void>; aoCancelar?: () => void }) {
+  const [nome, setNome] = useState(inicial?.nome ?? '')
+  const [telefone, setTelefone] = useState(inicial?.telefone ?? '')
+  const [nomesTexto, setNomesTexto] = useState((inicial?.nomes_convidados ?? []).join('\n'))
+  const [maxPessoas, setMaxPessoas] = useState(inicial?.max_pessoas ?? 1)
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
 
-  async function criar(event: React.FormEvent) {
+  const id = inicial?.id ?? 'novo'
+  const convidados = paraLista(nomesTexto)
+  const lugares = Math.max(maxPessoas, convidados.length, 1)
+  const acompanhantes = lugares - convidados.length
+
+  async function salvar(event: React.FormEvent) {
     event.preventDefault()
-    if (!supabase) return
+    if (!supabase || salvando) return
+    if (convidados.some((n) => n.split(' ').length < 2)) return setErro('Coloque nome e sobrenome de cada convidado, um por linha.')
+    if (lugares > 20) return setErro('Máximo de 20 lugares por convite.')
     setSalvando(true)
     setErro('')
+    const dados = { nome: nome.trim(), telefone: telefone.trim() || null, nomes_convidados: convidados, max_pessoas: lugares }
     let error = null
-    for (let tentativa = 0; tentativa < 3; tentativa++) {
-      ;({ error } = await supabase.from('convites').insert({ nome: nome.trim(), telefone: telefone.trim() || null, max_pessoas: maxPessoas, codigo: gerarCodigo() }))
-      if (error?.code !== '23505') break // 23505 = código repetido, tenta outro
+    if (inicial) {
+      ;({ error } = await supabase.from('convites').update(dados).eq('id', inicial.id))
+    } else {
+      for (let tentativa = 0; tentativa < 3; tentativa++) {
+        ;({ error } = await supabase.from('convites').insert({ ...dados, codigo: gerarCodigo() }))
+        if (error?.code !== '23505') break // 23505 = código repetido, tenta outro
+      }
     }
     setSalvando(false)
-    if (error) return setErro('Não foi possível criar o convite. Verifique se seu e-mail está na tabela de admins.')
-    setNome('')
-    setTelefone('')
-    setMaxPessoas(2)
-    await aoCriar()
+    if (error) {
+      return setErro(
+        error.message.includes('nomes_convidados')
+          ? 'Rode o arquivo supabase/02-confirmacao-por-nome.sql no Supabase antes de cadastrar nomes.'
+          : 'Não foi possível salvar o convite. Verifique se seu e-mail está na tabela de admins.',
+      )
+    }
+    if (!inicial) {
+      setNome('')
+      setTelefone('')
+      setNomesTexto('')
+      setMaxPessoas(1)
+    }
+    await aoSalvar()
   }
 
   return (
-    <form onSubmit={criar} className="paper-card mt-8 grid gap-4 md:grid-cols-2 md:items-end lg:grid-cols-[2fr_1.4fr_auto_auto]">
+    <form onSubmit={salvar} className={`grid gap-4 md:grid-cols-2 ${inicial ? 'mt-4 border-t border-linha pt-4' : 'paper-card mt-8'}`}>
       <div>
-        <label htmlFor="nome" className="field-label">Convite para</label>
-        <input id="nome" required value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Família Silva" className="field-input" />
+        <label htmlFor={`nome-${id}`} className="field-label">Convite para</label>
+        <input id={`nome-${id}`} required value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Família Silva" className="field-input" />
       </div>
       <div>
-        <label htmlFor="telefone" className="field-label">WhatsApp</label>
-        <input id="telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(85) 99999-9999" inputMode="tel" className="field-input" />
+        <label htmlFor={`tel-${id}`} className="field-label">WhatsApp</label>
+        <input id={`tel-${id}`} value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(85) 99999-9999" inputMode="tel" className="field-input" />
+      </div>
+      <div className="md:col-span-2">
+        <label htmlFor={`nomes-${id}`} className="field-label">Nomes dos convidados (um por linha)</label>
+        <textarea
+          id={`nomes-${id}`}
+          value={nomesTexto}
+          onChange={(e) => { setNomesTexto(e.target.value); setErro('') }}
+          rows={Math.max(3, convidados.length + 1)}
+          placeholder={'João Silva\nMaria Silva\nPedro Silva'}
+          className="field-input resize-y"
+        />
+        <p className="small-caps mt-2 !tracking-[0.12em]">É por esses nomes que cada convidado encontra o convite ao confirmar</p>
       </div>
       <div>
-        <label htmlFor="lugares" className="field-label">Lugares</label>
-        <input id="lugares" type="number" min={1} max={20} value={maxPessoas} onChange={(e) => setMaxPessoas(Number(e.target.value) || 1)} className="field-input lg:w-24" />
+        <label htmlFor={`lugares-${id}`} className="field-label">Lugares no convite</label>
+        <input
+          id={`lugares-${id}`}
+          type="number"
+          min={Math.max(1, convidados.length)}
+          max={20}
+          value={lugares}
+          onChange={(e) => setMaxPessoas(Number(e.target.value) || 1)}
+          className="field-input"
+        />
+        <p className="small-caps mt-2 !tracking-[0.12em]">
+          {convidados.length} {convidados.length === 1 ? 'nome' : 'nomes'}
+          {acompanhantes > 0 && ` + ${acompanhantes} ${acompanhantes === 1 ? 'acompanhante' : 'acompanhantes'}`}
+        </p>
       </div>
-      <button type="submit" disabled={salvando} className="btn-primary">Adicionar <Plus /></button>
-      {erro && <p className="field-error !text-left md:col-span-2 lg:col-span-4">{erro}</p>}
+      <div className="flex items-start gap-2 md:items-center md:justify-end md:pt-3">
+        {aoCancelar && <button type="button" onClick={aoCancelar} className="btn-outline">Cancelar</button>}
+        <button type="submit" aria-busy={salvando} className="btn-primary flex-1 md:flex-none">
+          {salvando ? 'Salvando…' : inicial ? 'Salvar' : 'Adicionar'} {inicial ? <Check /> : <Plus />}
+        </button>
+      </div>
+      {erro && <p role="alert" className="field-error !text-left md:col-span-2">{erro}</p>}
     </form>
   )
 }
 
 function LinhaConvite({ convite, aoAlterar }: { convite: Convite; aoAlterar: () => Promise<void> }) {
   const [copiado, setCopiado] = useState(false)
+  const [editando, setEditando] = useState(false)
 
   async function copiar() {
     await navigator.clipboard.writeText(linkDoConvite(convite.codigo))
@@ -193,11 +250,15 @@ function LinhaConvite({ convite, aoAlterar }: { convite: Convite; aoAlterar: () 
             </span>
           </div>
           <p className="small-caps mt-1 !tracking-[0.14em]">
-            Código {convite.codigo} · {convite.status === 'confirmado' ? `${convite.pessoas_confirmadas} de ${convite.max_pessoas}` : convite.max_pessoas}{' '}
+            {convite.status === 'confirmado' ? `${convite.pessoas_confirmadas} de ${convite.max_pessoas}` : convite.max_pessoas}{' '}
             {convite.max_pessoas === 1 ? 'lugar' : 'lugares'}
           </p>
+          {(convite.nomes_convidados ?? []).length > 0 && (
+            <p className="mt-1 font-serif text-[15px] text-suave">Convidados: {convite.nomes_convidados.join(' · ')}</p>
+          )}
         </div>
         <div className="flex gap-2">
+          <button type="button" onClick={() => setEditando((v) => !v)} className="btn-outline !min-h-10 !px-4" title="Editar convite" aria-expanded={editando}><Pencil /></button>
           <button type="button" onClick={copiar} className="btn-outline !min-h-10 !px-4" title="Copiar link do convite">{copiado ? <Check /> : <Copy />}</button>
           <a href={linkWhatsApp(convite)} target="_blank" rel="noreferrer" className="btn-outline !min-h-10 !px-4" title="Enviar pelo WhatsApp"><MessageCircle /></a>
           <button type="button" onClick={excluir} className="btn-outline !min-h-10 !px-4" title="Excluir convite"><Trash2 /></button>
@@ -205,9 +266,16 @@ function LinhaConvite({ convite, aoAlterar }: { convite: Convite; aoAlterar: () 
       </div>
       {(convite.nomes_confirmados.length > 0 || convite.mensagem) && (
         <div className="mt-3 border-t border-linha pt-3 font-serif text-[15px] text-texto">
-          {convite.nomes_confirmados.length > 0 && <p>{convite.nomes_confirmados.join(' · ')}</p>}
+          {convite.nomes_confirmados.length > 0 && <p>Vão: {convite.nomes_confirmados.join(' · ')}</p>}
           {convite.mensagem && <p className="mt-1 italic text-suave">“{convite.mensagem}”</p>}
         </div>
+      )}
+      {editando && (
+        <FormularioConvite
+          inicial={convite}
+          aoCancelar={() => setEditando(false)}
+          aoSalvar={async () => { setEditando(false); await aoAlterar() }}
+        />
       )}
     </li>
   )

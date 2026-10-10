@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { Check, Copy } from 'lucide-react'
 
-export function CopiarPix({ chave }: { chave: string }) {
+export function CopiarPix({ chave, copiaECola = false }: { chave: string; copiaECola?: boolean }) {
   const [copiado, setCopiado] = useState(false)
+  const nome = copiaECola ? 'código Pix' : 'chave Pix'
 
   async function copiar() {
     try {
@@ -12,13 +13,13 @@ export function CopiarPix({ chave }: { chave: string }) {
       setCopiado(true)
       setTimeout(() => setCopiado(false), 2500)
     } catch {
-      window.prompt('Copie a chave Pix:', chave)
+      window.prompt(`Copie o ${nome}:`, chave)
     }
   }
 
   return (
     <button type="button" onClick={copiar} className="btn-primary w-full sm:w-auto">
-      {copiado ? <>Chave copiada <Check /></> : <>Copiar chave Pix <Copy /></>}
+      {copiado ? <>Copiado! <Check /></> : <>Copiar {nome} <Copy /></>}
     </button>
   )
 }

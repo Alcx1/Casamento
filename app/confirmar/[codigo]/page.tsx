@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { CabecalhoInterno, Moldura, Rodape } from '@/components/convite/moldura'
-import { FormularioCodigo } from '@/components/convite/formulario-codigo'
+import { BuscaPorNome } from '@/components/convite/busca-por-nome'
 import { FormularioPresenca } from '@/components/convite/formulario-presenca'
 import { casamento } from '@/lib/casamento'
 import { buscarConvite } from '@/lib/supabase'
@@ -16,19 +16,19 @@ export default async function ConfirmarConvitePage({ params }: { params: Promise
 
   return (
     <Moldura>
-      <CabecalhoInterno eyebrow="Confirme sua presença" titulo={convite ? 'Você vem?' : 'Ops!'}>
+      <CabecalhoInterno eyebrow="Confirme sua presença" titulo="Você vem?">
         {convite ? (
           <p className="quote mx-auto mt-8 max-w-md">
             Querido(s) <span className="not-italic font-medium text-azul">{convite.nome}</span>, será uma alegria ter vocês conosco.
           </p>
         ) : (
-          <p className="quote mx-auto mt-8 max-w-md">Não encontramos esse código. Confira o link que você recebeu ou digite o código novamente.</p>
+          <p className="quote mx-auto mt-8 max-w-md">Digite seu nome para encontrarmos o seu convite.</p>
         )}
       </CabecalhoInterno>
 
       <section className="section-padding border-t border-linha bg-nevoa text-center">
         <div className="paper-card mx-auto max-w-md">
-          {convite ? <FormularioPresenca convite={convite} /> : <FormularioCodigo />}
+          {convite ? <FormularioPresenca convite={convite} /> : <BuscaPorNome />}
         </div>
         <p className="small-caps mt-8">Confirme até dia {casamento.prazoConfirmacao}</p>
       </section>

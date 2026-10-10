@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
+import { MusicaProvider } from '@/components/convite/musica'
 
 const fonteNomes = localFont({
   src: './fonts/Gisella.ttf',
@@ -49,7 +50,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${fonteNomes.variable} antialiased`}>
-        {children}
+        <MusicaProvider>{children}</MusicaProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

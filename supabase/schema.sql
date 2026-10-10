@@ -137,3 +137,5 @@ create policy "todos veem fotos" on storage.objects
 
 -- 4) Cadastre aqui o(s) e-mail(s) dos noivos (os mesmos criados em Authentication > Users)
 -- insert into public.admins (email) values ('seu-email@exemplo.com'), ('email-da-aurea@exemplo.com');
+
+-- 5) Em seguida, rode também o arquivo 02-confirmacao-por-nome.sql (confirmação pelo nome, sem código)

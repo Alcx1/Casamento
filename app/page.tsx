@@ -1,5 +1,7 @@
 import Link from 'next/link'
-import { Camera, Check, Church, ChevronDown, ExternalLink, Gift, Heart, MapPin, UtensilsCrossed } from 'lucide-react'
+import { ArrowUpRight, Camera, Check, ChevronDown, ChevronRight, Church, Gift, Heart, MapPin, UtensilsCrossed } from 'lucide-react'
+import { Abertura } from '@/components/convite/abertura'
+import { ContagemRegressiva } from '@/components/convite/contagem-regressiva'
 import { ArabescoTopo, Moldura, OrnamentalDivider, Rodape } from '@/components/convite/moldura'
 import { casamento, slotsDeFoto } from '@/lib/casamento'
 import { buscarConvite, buscarFotos } from '@/lib/supabase'
@@ -28,6 +30,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ c
 
   return (
     <Moldura>
+      <Abertura convidado={convite?.nome} />
       <header className="hero-section relative flex min-h-[760px] flex-col items-center justify-center overflow-hidden px-6 pt-28 pb-20 text-center sm:min-h-[860px] sm:px-16 sm:pt-40">
         <ArabescoTopo />
         <p className="eyebrow relative">O nosso sim começa aqui</p>
@@ -68,26 +71,38 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ c
         <h2 className="date-display">27 de dezembro<br /><span>de 2026</span></h2>
         <p className="mt-5 font-sans text-xs uppercase tracking-[0.3em] text-texto">Domingo, às 16h</p>
         <OrnamentalDivider />
-        <div className="mx-auto max-w-md space-y-10 font-sans text-xs uppercase tracking-[0.2em] text-texto">
-          <div>
-            <Church className="mx-auto mb-3 size-5 text-icone" strokeWidth={1.2} />
-            <p>Cerimônia na Cripta<br />da Catedral de Fortaleza</p>
-            <p className="mt-2 text-azul">{casamento.igreja.endereco}</p>
+        <div className="mx-auto grid max-w-2xl gap-4 sm:grid-cols-2">
+          <div className="venue-card">
+            <span className="icon-circle mx-auto size-12"><Church className="size-5" strokeWidth={1.3} /></span>
+            <p className="eyebrow mt-5">Cerimônia</p>
+            <p className="mt-3 font-serif text-[22px] leading-snug text-titulo">Cripta da Catedral<br />de Fortaleza</p>
+            <span className="venue-rule" aria-hidden="true" />
+            <p className="small-caps leading-relaxed !text-azul">{casamento.igreja.endereco}</p>
           </div>
-          <div>
-            <UtensilsCrossed className="mx-auto mb-3 size-5 text-icone" strokeWidth={1.2} />
-            <p>Após a cerimônia, os convidados serão recebidos no espaço {casamento.buffet.nome}</p>
-            <p className="mt-2 text-azul">{casamento.buffet.endereco}</p>
+          <div className="venue-card">
+            <span className="icon-circle mx-auto size-12"><UtensilsCrossed className="size-5" strokeWidth={1.3} /></span>
+            <p className="eyebrow mt-5">Recepção</p>
+            <p className="mt-3 font-serif text-[22px] leading-snug text-titulo">Espaço {casamento.buffet.nome}</p>
+            <p className="mt-2 font-serif text-[15px] italic leading-snug text-texto">Após a cerimônia, receberemos vocês para celebrar</p>
+            <span className="venue-rule" aria-hidden="true" />
+            <p className="small-caps leading-relaxed !text-azul">{casamento.buffet.endereco}</p>
           </div>
         </div>
       </section>
 
-      <nav className="flex flex-col gap-3 bg-nevoa px-6 py-12 sm:px-20" aria-label="Links do convite">
-        <a className="invite-link" href={casamento.igreja.mapa} target="_blank" rel="noreferrer"><Church data-icon="inline-start" /> Localização da igreja <ExternalLink data-icon="inline-end" /></a>
-        <a className="invite-link" href={casamento.buffet.mapa} target="_blank" rel="noreferrer"><MapPin data-icon="inline-start" /> Localização do buffet <ExternalLink data-icon="inline-end" /></a>
-        <a className="invite-link" href="#historia"><Heart data-icon="inline-start" /> Site dos noivos <ExternalLink data-icon="inline-end" /></a>
-        <Link className="invite-link" href="/presentes"><Gift data-icon="inline-start" /> Lista de presente <ExternalLink data-icon="inline-end" /></Link>
-        <Link className="invite-link invite-link-dark" href={linkConfirmacao}><Check data-icon="inline-start" /> Confirme sua presença <ExternalLink data-icon="inline-end" /></Link>
+      <nav className="flex flex-col gap-3 bg-nevoa px-5 py-14 sm:px-20" aria-label="Links do convite">
+        <a className="invite-link" href={casamento.igreja.mapa} target="_blank" rel="noreferrer">
+          <span className="invite-icon"><Church /></span><span className="invite-label">Localização da igreja</span><ArrowUpRight className="invite-arrow" />
+        </a>
+        <a className="invite-link" href={casamento.buffet.mapa} target="_blank" rel="noreferrer">
+          <span className="invite-icon"><MapPin /></span><span className="invite-label">Localização do buffet</span><ArrowUpRight className="invite-arrow" />
+        </a>
+        <Link className="invite-link" href="/presentes">
+          <span className="invite-icon"><Gift /></span><span className="invite-label">Lista de presentes</span><ChevronRight className="invite-arrow" />
+        </Link>
+        <Link className="invite-link invite-link-dark" href={linkConfirmacao}>
+          <span className="invite-icon"><Check /></span><span className="invite-label">Confirme sua presença</span><ChevronRight className="invite-arrow" />
+        </Link>
       </nav>
 
       <section id="rsvp" className="section-padding bg-papel text-center">
@@ -96,6 +111,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ c
         <p className="lead mx-auto mt-4 max-w-sm">Sua presença vai tornar este dia ainda mais especial.</p>
         <Link href={linkConfirmacao} className="btn-primary mt-8">Confirmar presença <Check /></Link>
         <p className="small-caps mt-6">Confirmar presença até dia {casamento.prazoConfirmacao}</p>
+      </section>
+
+      <section className="section-padding border-t border-linha bg-nevoa text-center">
+        <p className="eyebrow">Contagem regressiva</p>
+        <h2 className="section-title mt-4">Falta pouco para o nosso sim</h2>
+        <div className="mt-10"><ContagemRegressiva /></div>
+        <p className="small-caps mt-8">27 de dezembro de 2026 · às 16h</p>
       </section>
 
       <Rodape />

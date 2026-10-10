@@ -3,7 +3,15 @@
 export const casamento = {
   noivos: 'Aurea & Alec',
   data: '27.12.2026',
+  // Data e hora exatas da cerimônia (horário de Fortaleza, UTC-3) — usada na contagem regressiva
+  dataHora: '2026-12-27T16:00:00-03:00',
   prazoConfirmacao: '20 de outubro',
+
+  // WhatsApp dos noivos (só números, com DDI 55 + DDD) para quem não encontrar o nome na lista
+  contatoWhatsApp: '5585985645776',
+
+  // Coloque o arquivo da música em /public/musica/alianca.mp3
+  musica: '/musica/alianca.mp3',
 
   igreja: {
     nome: 'Cripta da Catedral de Fortaleza',
@@ -20,17 +28,9 @@ export const casamento = {
   presentes: {
     // Coloque a imagem do QR Code em /public/pix-qrcode.png
     qrCode: '/pix-qrcode.png',
-    chavePix: 'sua-chave-pix@exemplo.com',
-    titular: 'Nome do titular da conta',
-    banco: 'Banco',
-    sugestoes: [
-      { titulo: 'Café da manhã na lua de mel', valor: 'R$ 80' },
-      { titulo: 'Jantar romântico', valor: 'R$ 150' },
-      { titulo: 'Passeio a dois', valor: 'R$ 250' },
-      { titulo: 'Diária no hotel', valor: 'R$ 400' },
-      { titulo: 'Nosso primeiro sofá', valor: 'R$ 600' },
-      { titulo: 'Passagens da lua de mel', valor: 'R$ 1.000' },
-    ],
+    chavePix: '00020101021126840014br.gov.bcb.pix013653b798e4-b553-4962-95bb-33bd42a392160222Casamento Aurea e Alec5204000053039865802BR5912Emanuel Alec6009Sao Paulo62070503***6304875A',
+    titular: 'Emanuel Alec',
+    banco: 'Revolut',
   },
 }
 
