@@ -78,7 +78,7 @@ export function PainelConvidados() {
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Indicador valor={`${resumo.confirmadas}/${resumo.total}`} label="Pessoas confirmadas" destaque />
         <Indicador valor={resumo.confirmados} label="Convites confirmados" />
         <Indicador valor={resumo.pendentes} label="Aguardando resposta" />
@@ -87,7 +87,7 @@ export function PainelConvidados() {
 
       <NovoConvite aoCriar={recarregar} />
 
-      <div className="mt-12 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-12 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-2">
           {filtros.map((f) => (
             <button key={f.id} type="button" onClick={() => setFiltro(f.id)} className={`${filtro === f.id ? 'btn-primary' : 'btn-outline'} !min-h-9 !px-4 !text-[9px]`}>
@@ -148,7 +148,7 @@ function NovoConvite({ aoCriar }: { aoCriar: () => Promise<void> }) {
   }
 
   return (
-    <form onSubmit={criar} className="paper-card mt-8 grid gap-4 sm:grid-cols-[2fr_1.4fr_auto_auto] sm:items-end">
+    <form onSubmit={criar} className="paper-card mt-8 grid gap-4 md:grid-cols-2 md:items-end lg:grid-cols-[2fr_1.4fr_auto_auto]">
       <div>
         <label htmlFor="nome" className="field-label">Convite para</label>
         <input id="nome" required value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Família Silva" className="field-input" />
@@ -159,10 +159,10 @@ function NovoConvite({ aoCriar }: { aoCriar: () => Promise<void> }) {
       </div>
       <div>
         <label htmlFor="lugares" className="field-label">Lugares</label>
-        <input id="lugares" type="number" min={1} max={20} value={maxPessoas} onChange={(e) => setMaxPessoas(Number(e.target.value) || 1)} className="field-input sm:w-24" />
+        <input id="lugares" type="number" min={1} max={20} value={maxPessoas} onChange={(e) => setMaxPessoas(Number(e.target.value) || 1)} className="field-input lg:w-24" />
       </div>
-      <button type="submit" disabled={salvando || !nome.trim()} className="btn-primary">Adicionar <Plus /></button>
-      {erro && <p className="font-sans text-xs text-[#9a5f5f] sm:col-span-4">{erro}</p>}
+      <button type="submit" disabled={salvando} className="btn-primary">Adicionar <Plus /></button>
+      {erro && <p className="field-error !text-left md:col-span-2 lg:col-span-4">{erro}</p>}
     </form>
   )
 }
@@ -184,7 +184,7 @@ function LinhaConvite({ convite, aoAlterar }: { convite: Convite; aoAlterar: () 
 
   return (
     <li className="rounded-2xl border border-borda bg-white px-5 py-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-serif text-xl text-titulo">{convite.nome}</p>

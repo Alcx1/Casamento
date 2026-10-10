@@ -80,8 +80,8 @@ function SlotFoto({ id, label, src, aoAlterar }: { id: string; label: string; sr
         {src ? (
           <img src={src} alt={label} className="absolute inset-0 size-full object-cover" />
         ) : (
-          <span className="flex flex-col items-center gap-3 text-[#6e7f91]">
-            <span className="flex size-11 items-center justify-center rounded-full border border-[#9bb6c8] bg-white/70"><Camera className="size-5" strokeWidth={1.4} /></span>
+          <span className="flex flex-col items-center gap-3 text-acento">
+            <span className="flex size-11 items-center justify-center icon-circle"><Camera className="size-5" strokeWidth={1.4} /></span>
             <span className="font-sans text-[10px] uppercase tracking-[0.28em]">{label}</span>
           </span>
         )}
@@ -92,7 +92,7 @@ function SlotFoto({ id, label, src, aoAlterar }: { id: string; label: string; sr
         <button type="button" disabled={ocupado} onClick={() => inputRef.current?.click()} className="btn-primary !px-5">{src ? 'Trocar' : 'Enviar'} <Upload /></button>
         {src && <button type="button" disabled={ocupado} onClick={remover} className="btn-outline !px-4" aria-label={`Remover ${label}`}><Trash2 /></button>}
       </div>
-      {erro && <p className="mt-3 font-sans text-xs text-[#9a5f5f]">{erro}</p>}
+      {erro && <p role="alert" className="field-error mt-3">{erro}</p>}
       <input ref={inputRef} type="file" accept="image/*" onChange={enviar} className="sr-only" />
     </div>
   )

@@ -17,8 +17,8 @@ export function QrCodePix({ src }: { src: string }) {
   return (
     <div className="photo-slot relative mx-auto aspect-square w-full max-w-[260px] bg-white p-5">
       {erro ? (
-        <span className="flex flex-col items-center gap-3 text-[#6e7f91]">
-          <span className="flex size-12 items-center justify-center rounded-full border border-[#9bb6c8] bg-white/70">
+        <span className="flex flex-col items-center gap-3 text-acento">
+          <span className="flex size-12 items-center justify-center icon-circle">
             <QrCode aria-hidden="true" className="size-6" strokeWidth={1.3} />
           </span>
           <span className="font-sans text-[10px] uppercase tracking-[0.28em]">QR Code Pix</span>

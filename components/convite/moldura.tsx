@@ -4,12 +4,21 @@ import { casamento } from '@/lib/casamento'
 
 export function ArabescoTopo() {
   return (
-    <img
-      src="/arabesco.png"
-      alt=""
-      aria-hidden="true"
-      className="pointer-events-none absolute left-1/2 -top-2 h-auto w-full max-w-none -translate-x-1/2 select-none opacity-90 mix-blend-multiply sm:-top-10"
-    />
+    <>
+      {/* Deixa o fundo branco do PNG transparente e pinta as linhas com o azul da paleta (#4a6290) */}
+      <svg aria-hidden="true" className="absolute size-0">
+        <filter id="arabesco-tinta" x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
+          <feColorMatrix type="matrix" values="0 0 0 0 0.29  0 0 0 0 0.384  0 0 0 0 0.565  -0.85 -0.85 -0.85 0 2.55" />
+          <feComposite in2="SourceGraphic" operator="in" />
+        </filter>
+      </svg>
+      <img
+        src="/arabesco.png"
+        alt=""
+        aria-hidden="true"
+        className="arabesco pointer-events-none absolute left-1/2 -top-2 h-auto w-full max-w-none -translate-x-1/2 select-none opacity-90 sm:-top-10"
+      />
+    </>
   )
 }
 
@@ -21,7 +30,7 @@ export function OrnamentalDivider() {
 export function Moldura({ children, larga = false }: { children: React.ReactNode; larga?: boolean }) {
   return (
     <main className="min-h-screen bg-creme px-3 py-3 text-tinta sm:px-6 sm:py-6">
-      <div className={`invitation-shell mx-auto overflow-hidden bg-papel shadow-[0_18px_70px_rgba(63,77,91,0.14)] ${larga ? 'max-w-[1040px]' : 'max-w-[760px]'}`}>
+      <div className={`invitation-shell mx-auto overflow-hidden bg-papel shadow-[0_18px_70px_rgba(31,40,64,0.12)] ${larga ? 'max-w-[1040px]' : 'max-w-[760px]'}`}>
         {children}
       </div>
     </main>
@@ -44,8 +53,8 @@ export function CabecalhoInterno({ eyebrow, titulo, children }: { eyebrow: strin
 export function Rodape() {
   return (
     <footer className="border-t border-linha px-6 py-9 text-center">
-      <Music className="mx-auto size-4 text-[#9eb1bf]" strokeWidth={1.3} />
-      <p className="mt-3 font-serif text-sm italic text-[#778894]">Com amor, {casamento.noivos}</p>
+      <Music className="mx-auto size-4 text-icone" strokeWidth={1.3} />
+      <p className="mt-3 font-serif text-sm italic text-suave">Com amor, {casamento.noivos}</p>
     </footer>
   )
 }

@@ -27,11 +27,14 @@ export function FormularioPresenca({ convite }: { convite: ConvitePublico }) {
   const [erro, setErro] = useState('')
 
   const nomesPreenchidos = nomes.map((n) => n.trim()).filter(Boolean)
-  const podeEnviar = vai === false || (vai === true && nomesPreenchidos.length > 0)
 
+  // O botão fica sempre clicável: no celular um botão desabilitado parece "travado", então explicamos o que falta.
   async function enviar(event: React.FormEvent) {
     event.preventDefault()
-    if (!supabase || vai === null) return
+    if (enviando) return
+    if (!supabase) return setErro('Confirmação indisponível no momento. Tente novamente mais tarde.')
+    if (vai === null) return setErro('Escolha se você poderá comparecer.')
+    if (vai && nomesPreenchidos.length === 0) return setErro('Preencha o nome de pelo menos uma pessoa.')
     setEnviando(true)
     setErro('')
     const { error } = await supabase.rpc('responder_convite', {
@@ -84,10 +87,10 @@ export function FormularioPresenca({ convite }: { convite: ConvitePublico }) {
     <form onSubmit={enviar} className="text-left">
       <p className="field-label text-center">Você poderá comparecer?</p>
       <div className="grid grid-cols-2 gap-3">
-        <button type="button" className="choice-card" data-ativo={vai === true} onClick={() => setVai(true)}>
+        <button type="button" className="choice-card" data-ativo={vai === true} aria-pressed={vai === true} onClick={() => { setVai(true); setErro("") }}>
           <Check className="size-5" strokeWidth={1.4} /> Sim, eu vou!
         </button>
-        <button type="button" className="choice-card" data-ativo={vai === false} onClick={() => setVai(false)}>
+        <button type="button" className="choice-card" data-ativo={vai === false} aria-pressed={vai === false} onClick={() => { setVai(false); setErro("") }}>
           <Frown className="size-5" strokeWidth={1.4} /> Não poderei
         </button>
       </div>
@@ -104,6 +107,8 @@ export function FormularioPresenca({ convite }: { convite: ConvitePublico }) {
               onChange={(e) => setNomes((atual) => atual.map((n, j) => (j === i ? e.target.value : n)))}
               placeholder={convite.max_pessoas === 1 ? 'Nome completo' : `Convidado ${i + 1}`}
               aria-label={`Nome do convidado ${i + 1}`}
+              autoCapitalize="words"
+              autoComplete={i === 0 ? "name" : "off"}
               className="field-input"
             />
           ))}
@@ -126,10 +131,9 @@ export function FormularioPresenca({ convite }: { convite: ConvitePublico }) {
         </div>
       )}
 
-      {erro && <p className="mt-5 text-center font-sans text-xs text-[#9a5f5f]">{erro}</p>}
-      {!supabase && <p className="mt-5 text-center font-sans text-xs text-[#9a5f5f]">Confirmação indisponível no momento.</p>}
+      {erro && <p role="alert" className="field-error mt-5">{erro}</p>}
 
-      <button type="submit" disabled={!podeEnviar || enviando || !supabase} className="btn-primary mt-8 w-full">
+      <button type="submit" aria-busy={enviando} className="btn-primary mt-8 w-full">
         {enviando ? 'Enviando…' : 'Enviar resposta'} <Check />
       </button>
     </form>

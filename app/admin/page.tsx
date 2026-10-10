@@ -107,7 +107,7 @@ function Login() {
         <label htmlFor="senha" className="field-label">Senha</label>
         <input id="senha" type="password" required value={senha} onChange={(e) => setSenha(e.target.value)} className="field-input" autoComplete="current-password" />
       </div>
-      {erro && <p className="text-center font-sans text-xs text-[#9a5f5f]">{erro}</p>}
+      {erro && <p role="alert" className="field-error">{erro}</p>}
       <button type="submit" disabled={enviando} className="btn-primary w-full">{enviando ? 'Entrando…' : 'Entrar'} <LogIn /></button>
     </form>
   )

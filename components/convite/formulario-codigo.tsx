@@ -7,11 +7,13 @@ import { ArrowRight } from 'lucide-react'
 export function FormularioCodigo() {
   const router = useRouter()
   const [codigo, setCodigo] = useState('')
+  const [erro, setErro] = useState('')
 
   function enviar(event: React.FormEvent) {
     event.preventDefault()
     const limpo = codigo.trim().toUpperCase()
-    if (limpo) router.push(`/confirmar/${encodeURIComponent(limpo)}`)
+    if (!limpo) return setErro('Digite o código que veio no seu convite.')
+    router.push(`/confirmar/${encodeURIComponent(limpo)}`)
   }
 
   return (
@@ -20,13 +22,17 @@ export function FormularioCodigo() {
       <input
         id="codigo"
         value={codigo}
-        onChange={(e) => setCodigo(e.target.value)}
+        onChange={(e) => { setCodigo(e.target.value); setErro('') }}
         placeholder="Ex.: AB12CD"
         autoComplete="off"
+        autoCorrect="off"
         autoCapitalize="characters"
+        spellCheck={false}
+        enterKeyHint="go"
         className="field-input text-center uppercase tracking-[0.3em]"
       />
-      <button type="submit" disabled={!codigo.trim()} className="btn-primary mt-5 w-full">Continuar <ArrowRight /></button>
+      {erro && <p role="alert" className="field-error mt-3">{erro}</p>}
+      <button type="submit" className="btn-primary mt-5 w-full">Continuar <ArrowRight /></button>
     </form>
   )
 }
