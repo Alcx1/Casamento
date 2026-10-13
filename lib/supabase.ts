@@ -22,7 +22,8 @@ export type Convite = {
   criado_em: string
 }
 
-export type ConvitePublico = Pick<
+// nome_encontrado só vem na busca por nome: é o convidado que combinou com o que foi digitado
+export type ConvitePublico = { nome_encontrado?: string } & Pick<
   Convite,
   'codigo' | 'nome' | 'max_pessoas' | 'status' | 'pessoas_confirmadas' | 'nomes_convidados' | 'nomes_confirmados' | 'mensagem'
 >
