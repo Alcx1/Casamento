@@ -143,7 +143,6 @@ function FormularioConvite({ inicial, aoSalvar, aoCancelar }: { inicial?: Convit
   async function salvar(event: React.FormEvent) {
     event.preventDefault()
     if (!supabase || salvando) return
-    if (convidados.some((n) => n.split(' ').length < 2)) return setErro('Coloque nome e sobrenome de cada convidado, um por linha.')
     if (lugares > 20) return setErro('Máximo de 20 lugares por convite.')
     setSalvando(true)
     setErro('')
